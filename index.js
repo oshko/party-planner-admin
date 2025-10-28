@@ -1,6 +1,6 @@
 // === Constants ===
 const BASE = "https://fsa-crud-2aa9294fe819.herokuapp.com/api";
-const COHORT = ""; // Make sure to change this!
+const COHORT = "/2509-PT-Party-Page"; // Make sure to change this!
 const API = BASE + COHORT;
 
 // === State ===
@@ -32,7 +32,22 @@ async function getParty(id) {
     console.error(e);
   }
 }
+// add new Party 
+async function addParty (newPartInfo){
+  const isoDate = new Date(newPartInfo.date).toISOString();
+  newPartInfo.date = isoDate;
+  try {
+    await fetch(API +"/events", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(newPartInfo)
 
+    });
+    await getParties();
+  } catch (error) {
+    console.error(error);
+  }
+}
 /** Updates state with all RSVPs from the API */
 async function getRsvps() {
   try {
@@ -127,6 +142,36 @@ function GuestList() {
 
   return $ul;
 }
+// New party form
+function newPartyForm(){
+  const $newPartyForm = document.createElement("form");
+  $newPartyForm.innerHTML = `
+   <label for="name">Name:</label>
+   <input type="text" name="name"/>
+   <label for="description">Description:</label>
+   <input type="text" name="description"/>
+   <label for="date">Date:</label>
+   <input type="date" name="date"/>
+   <label for="location">Location:</label>
+   <input type="text" name="location"/>
+   <button>Add Party</button>
+  `;
+
+  $newPartyForm.addEventListener("submit", (event)=>{
+    event.preventDefault();
+    const userInput = new FormData($newPartyForm);
+    addParty({
+      name: userInput.get("name"),
+      description: userInput.get("description"),
+      date: userInput.get("date"),
+      location: userInput.get("location")
+    });
+  });
+
+  
+
+  return $newPartyForm;
+}
 
 // === Render ===
 function render() {
@@ -137,6 +182,8 @@ function render() {
       <section>
         <h2>Upcoming Parties</h2>
         <PartyList></PartyList>
+        <h2>Add New Party</h2>
+        <newPartyForm></newPartyForm>
       </section>
       <section id="selected">
         <h2>Party Details</h2>
@@ -147,6 +194,7 @@ function render() {
 
   $app.querySelector("PartyList").replaceWith(PartyList());
   $app.querySelector("SelectedParty").replaceWith(SelectedParty());
+  $app.querySelector('newPartyForm').replaceWith(newPartyForm());
 }
 
 async function init() {
